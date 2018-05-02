@@ -28,16 +28,21 @@ type (
 // https://www.w3.org/Daemon/User/Config/Logging.html#common-logfile-format.
 // spec:    remotehost rfc931 authuser [date] "request" status bytes
 // example: 127.0.0.1 user-identifier frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326
-var logRegex = regexp.MustCompile( // ^(\S+)\s(\S+)\s(\S+)\s\[(\d{2}/\w{3}/\d{2}(?:\d{2}:){3}\d{2} [-+]\d{4})\]\s\"(\S+)\s(\S+)\s(\S+)\"\s(\d{3})\s(\d+)
+//
+// todo: define and try multiple parsers for different date formats
+// 01/May/2018 12:29:22
+// 10/Oct/2000:13:55:36 -0700 - (\d{2}/\w{3}/\d{2}(?:\d{2}:){3}\d{2} [-+]\d{4})
+var logRegex = regexp.MustCompile( // ^(\S+)\s(\S+)\s(\S+)\s\[(.*)\]\s\"(\S+)\s(\S+)\s(\S+)\"\s(\d{3})\s(\d+)
 	`^(\S+)\s` + // remoteHost
 		`(\S+)\s` + // userId
 		`(\S+)\s` + // authUser
-		`\[(\d{2}/\w{3}/\d{2}(?:\d{2}:){3}\d{2} [-+]\d{4})\]\s` + // date
+		`\[(.*)\]\s` + // date
 		`\"(\S+)\s` + // request.method
 		`(\S+)\s` + // request.path
 		`(\S+)\"\s` + // request.httpType
-		`(\d{3})\s` + // respCode
-		`(\d+)`) // txBytes
+		`(\S+)\s` + // respCode
+		`(\S+)` + // txBytes
+		`.*`)
 
 // parseLine parses a log line and returns a logEntry for further processing.
 func parseLine(s string) (logEntry, error) {
