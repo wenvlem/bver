@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"sort"
 	"testing"
 	"time"
@@ -141,4 +142,39 @@ func TestSaturation(t *testing.T) {
 		<-time.After(time.Millisecond * 900)
 	}
 	<-time.After(time.Millisecond * 1500)
+}
+
+func readChan(ctx context.Context) {
+	for {
+		select {
+		case <-outChan:
+
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func TestTail(t *testing.T) {
+	localPath := "/tmp/logs"
+	f, err := os.Create(localPath)
+	if err != nil {
+		t.Errorf("Failed to create file to watch - %s", err.Error())
+		t.FailNow()
+	}
+	defer os.RemoveAll(localPath)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	<-time.After(time.Millisecond * 250)
+	go readChan(ctx)
+	go tail(ctx, localPath)
+	<-time.After(time.Millisecond * 500)
+	_, err = f.WriteString("this is a test\n")
+	if err != nil {
+		t.Errorf("Failed to write")
+	}
+	<-time.After(time.Millisecond * 100)
+	cancel()
 }
