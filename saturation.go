@@ -9,24 +9,23 @@ import (
 
 // satMon defines a saturation monitor.
 type satMon struct {
-	count     int64
-	threshold int64
-	ttl       time.Duration
+	count     int64         // count is the number of occurrences.
+	threshold int64         // threshold is the upper limit before an alert is "triggerred."
+	ttl       time.Duration // ttl is the size of the window the threshold applies to.
 }
 
-var (
-	// configurable
-	duration = 120 // duration is the size of the monitoring window. Will also serve us as the ttl.
-	psLimit  = 10  // psLimit is the threshold for things (requests) per second.
-
-	defTTL = time.Second * time.Duration(duration)
-)
-
+// newSaturationMonitor returns a pointer to a new satMon.
 // todo: use functional options, set above vars as defaults inside this function
 func newSaturationMonitor() *satMon {
-	return &satMon{count: 0, threshold: int64(psLimit * duration), ttl: defTTL}
+	s := &satMon{
+		count:     0,
+		threshold: int64(psLimit * duration),
+		ttl:       time.Second * time.Duration(duration),
+	}
+	return s
 }
 
+// push adds 1 to a satMon's counter and calls for it to be subtracted at ttl.
 func (r *satMon) push(ttl ...time.Duration) {
 	var t time.Duration
 	if ttl == nil || len(ttl) < 1 {
@@ -39,6 +38,7 @@ func (r *satMon) push(ttl ...time.Duration) {
 	go r.pop(t)
 }
 
+// pop subtracts 1 to a satMon's counter at ttl.
 func (r *satMon) pop(ttl time.Duration) {
 	// todo: add total to be popped and do at once, would need to track their pop "time"
 	<-time.After(ttl)
@@ -47,6 +47,7 @@ func (r *satMon) pop(ttl time.Duration) {
 	}
 }
 
+// monitor watches a satMon's count, alerting if it exceeds the threshold.
 func (r *satMon) monitor(ctx context.Context) {
 	triggered := false
 	for {

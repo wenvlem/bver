@@ -7,20 +7,22 @@ import (
 )
 
 type (
+	// requestEntry defines parts of the log's "request" field.
 	requestEntry struct {
-		method   string
-		path     string
-		httpType string
+		method   string // method is what http method was used.
+		path     string // path is the requested resource.
+		httpVers string // httpVers is what http version was used.
 	}
 
+	// logEntry defines a common logfile formatted log entry.
 	logEntry struct {
-		remoteHost string
-		userId     string
-		authUser   string
-		date       string
-		request    requestEntry
-		respCode   int
-		txBytes    int
+		remoteHost string       // remoteHost is the host that made the request.
+		userId     string       // userId is the user-identifier field.
+		authUser   string       // authuser is the user that made the request.
+		date       string       // date is the date of the request.
+		request    requestEntry // request is the "request" field.
+		respCode   int          // respCode is the status the server responded with.
+		txBytes    int          // txBytes is a count of the bytes the server responded with.
 	}
 )
 
@@ -39,7 +41,7 @@ var logRegex = regexp.MustCompile( // ^(\S+)\s(\S+)\s(\S+)\s\[(.*)\]\s\"(\S+)\s(
 		`\[(.*)\]\s` + // date
 		`\"(\S+)\s` + // request.method
 		`(\S+)\s` + // request.path
-		`(\S+)\"\s` + // request.httpType
+		`(\S+)\"\s` + // request.httpVers
 		`(\S+)\s` + // respCode
 		`(\S+)` + // txBytes
 		`.*`)
@@ -59,7 +61,7 @@ func parseLine(s string) (logEntry, error) {
 		request: requestEntry{
 			method:   parts[5],
 			path:     parts[6],
-			httpType: parts[7],
+			httpVers: parts[7],
 		},
 		respCode: atoi(parts[8]),
 		txBytes:  atoi(parts[9]),

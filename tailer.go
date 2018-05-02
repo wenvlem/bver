@@ -11,6 +11,7 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/logs/pipeline/mock"
 )
 
+// tail tails a file, sending new data to outChan.
 // todo: reimplement with fsnotify and own file tailing logic
 func tail(ctx context.Context, logFile string, outChan chan string) {
 	source := config.NewLogSource("access", &config.LogsConfig{Type: "file", Path: logFile})
