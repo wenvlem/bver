@@ -49,6 +49,7 @@ func buildReport(ctx context.Context, e chan logEntry) {
 			report.print()
 			report.clear()
 		case entry := <-e:
+			saturation.push()
 			report.addRequest(request{section: entry.request.path, count: 1})
 			report.addResponse(response{code: entry.respCode, count: 1})
 			report.txBytes += entry.txBytes

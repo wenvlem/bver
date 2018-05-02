@@ -131,3 +131,14 @@ func TestSortPrint(t *testing.T) {
 	}
 	sort.Sort(q)
 }
+
+func TestSaturation(t *testing.T) {
+	thing := reqCount{count: 0, threshold: int64(5)}
+	go thing.monitor()
+
+	for i := 0; i < 10; i++ {
+		thing.push(time.Second * 5)
+		<-time.After(time.Millisecond * 900)
+	}
+	<-time.After(time.Millisecond * 1500)
+}

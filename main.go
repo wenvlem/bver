@@ -28,17 +28,35 @@ package main
 // }
 
 func main() {
+	// thing:= reqCount{count: 0, threshold: int64(2)}
+	// go thing.monitor()
+
+	// go thing.push(time.Millisecond*500)
+	// go thing.push(time.Second)
+	// <-time.After(time.Millisecond*6)
+	// fmt.Println(thing)
+	// <-time.After(time.Millisecond*600)
+	// fmt.Println(thing)
+	// <-time.After(time.Millisecond*600)
+	// fmt.Println(thing)
+	// <-time.After(time.Millisecond*1000)
+
 	// file, err := os.Open("/tmp/logs")
 	// if err != nil {
 	// 	fmt.Println(err)
 	// 	return
 	// }
 	// entries := []logEntry{}
+
+	// 	saturation.threshold = int64(200)
+	// 	go saturation.monitor()
+
 	// 	ctx := context.Background()
 	// 	entries := make(chan logEntry,16)
-
+	// 	reportFreq = 30
 	// 	go buildReport(ctx, entries)
 
+	// 	delay := 500
 	// keepLogging:
 	// 	for i := range logs {
 	// 		e, err := parseLine(logs[i])
@@ -47,6 +65,7 @@ func main() {
 	// 		}
 	// 		entries <- e
 	// 	}
-	// 	time.Sleep(time.Millisecond * 1500)
+	// 	delay+= 200
+	// 	time.Sleep(time.Millisecond * time.Duration(delay))
 	// 	goto keepLogging
 }
