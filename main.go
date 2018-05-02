@@ -21,6 +21,8 @@ func init() {
 	flag.IntVar(&psLimit, "t", 10, "Number of requests per second before printing an alert.")
 	flag.IntVar(&duration, "d", 120, "Duration of window to average requests per second.")
 	flag.Parse()
+
+	sanitizeOpts()
 }
 
 // sanitizeOpts resets sane defaults if bad input is given. It also attempts to create the log

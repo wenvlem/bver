@@ -16,12 +16,17 @@ type satMon struct {
 
 // newSaturationMonitor returns a pointer to a new satMon.
 // todo: use functional options, set above vars as defaults inside this function
-func newSaturationMonitor() *satMon {
+func newSaturationMonitor(opts ...func(*satMon)) *satMon {
 	s := &satMon{
 		count:     0,
 		threshold: int64(psLimit * duration),
 		ttl:       time.Second * time.Duration(duration),
 	}
+
+	for i := range opts {
+		opts[i](s)
+	}
+
 	return s
 }
 

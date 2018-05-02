@@ -12,7 +12,7 @@ bver (pronounced beaver) is a w3c-formatted http access log reader that reports 
 #### todo
  - [x] add configurable options (log file, report frequency, threshold, duration)
  - [x] create log file if not exist
- - [ ] improve newSaturationMonitor function/options
+ - [x] improve newSaturationMonitor function/options
+ - [ ] dockerize
  - [ ] track down memory leak when spamming logs
  - [ ] implement own file tailing logic
- - [ ] dockerize

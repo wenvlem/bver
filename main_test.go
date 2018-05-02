@@ -92,8 +92,11 @@ func TestReport(t *testing.T) {
 	entries := make(chan logEntry)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	var f = func(s *satMon) {
+		s.threshold = int64(200)
+	}
 
-	go buildReport(ctx, entries, newSaturationMonitor(), 2)
+	go buildReport(ctx, entries, newSaturationMonitor(f), 2)
 
 	for i := range logs {
 		e, err := parseLine(logs[i])
