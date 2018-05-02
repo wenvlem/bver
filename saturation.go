@@ -1,24 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
 	"time"
 )
 
-type reqCount struct {
+// satMon defines a saturation monitor.
+type satMon struct {
 	count     int64
 	threshold int64
 	ttl       time.Duration
 }
 
-func init() {
-	saturation = newSatMon()
-}
-
 var (
-	saturation reqCount // saturation will serve as the saturation monitor
-
 	// configurable
 	duration = 120 // duration is the size of the monitoring window. Will also serve us as the ttl.
 	psLimit  = 10  // psLimit is the threshold for things (requests) per second.
@@ -27,11 +23,11 @@ var (
 )
 
 // todo: use functional options, set above vars as defaults inside this function
-func newSatMon() reqCount {
-	return reqCount{count: 0, threshold: int64(psLimit * duration), ttl: defTTL}
+func newSaturationMonitor() *satMon {
+	return &satMon{count: 0, threshold: int64(psLimit * duration), ttl: defTTL}
 }
 
-func (r *reqCount) push(ttl ...time.Duration) {
+func (r *satMon) push(ttl ...time.Duration) {
 	var t time.Duration
 	if ttl == nil || len(ttl) < 1 {
 		t = r.ttl
@@ -43,7 +39,7 @@ func (r *reqCount) push(ttl ...time.Duration) {
 	go r.pop(t)
 }
 
-func (r *reqCount) pop(ttl time.Duration) {
+func (r *satMon) pop(ttl time.Duration) {
 	// todo: add total to be popped and do at once, would need to track their pop "time"
 	<-time.After(ttl)
 	if r.count > 0 {
@@ -51,18 +47,23 @@ func (r *reqCount) pop(ttl time.Duration) {
 	}
 }
 
-func (r *reqCount) monitor() {
+func (r *satMon) monitor(ctx context.Context) {
 	triggered := false
 	for {
-		if triggered && atomic.LoadInt64(&r.count) < r.threshold {
-			fmt.Printf("High traffic recovered at %s\n", time.Now().Format("15:04:05.1234"))
-			triggered = false
-		}
-		if !triggered && atomic.LoadInt64(&r.count) >= r.threshold {
-			fmt.Printf("High traffic generated an alert - hits = %d, triggered at %s\n", r.count, time.Now().Format("15:04:05.1234"))
-			triggered = true
-		}
+		select {
+		default:
+			if triggered && atomic.LoadInt64(&r.count) < r.threshold {
+				fmt.Printf("High traffic recovered at %s\n", time.Now().Format("15:04:05.1234"))
+				triggered = false
+			}
+			if !triggered && atomic.LoadInt64(&r.count) >= r.threshold {
+				fmt.Printf("High traffic generated an alert - hits = %d, triggered at %s\n", r.count, time.Now().Format("15:04:05.1234"))
+				triggered = true
+			}
 
-		<-time.After(time.Second)
+			<-time.After(time.Second)
+		case <-ctx.Done():
+			return
+		}
 	}
 }

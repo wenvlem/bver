@@ -11,12 +11,8 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/logs/pipeline/mock"
 )
 
-var (
-	outChan = make(chan string)
-)
-
 // todo: reimplement with fsnotify and own file tailing logic
-func tail(ctx context.Context, logFile string) {
+func tail(ctx context.Context, logFile string, outChan chan string) {
 	source := config.NewLogSource("access", &config.LogsConfig{Type: "file", Path: logFile})
 	sleepDuration := time.Millisecond * 100
 

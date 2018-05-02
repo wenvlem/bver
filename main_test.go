@@ -89,12 +89,11 @@ var logs = []string{
 }
 
 func TestReport(t *testing.T) {
+	entries := make(chan logEntry)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	entries := make(chan logEntry)
-
-	go buildReport(ctx, entries)
+	go buildReport(ctx, entries, newSaturationMonitor(), 2)
 
 	for i := range logs {
 		e, err := parseLine(logs[i])
@@ -134,8 +133,11 @@ func TestSortPrint(t *testing.T) {
 }
 
 func TestSaturation(t *testing.T) {
-	thing := reqCount{count: 0, threshold: int64(5)}
-	go thing.monitor()
+	thing := satMon{count: 0, threshold: int64(5)}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go thing.monitor(ctx)
 
 	for i := 0; i < 10; i++ {
 		thing.push(time.Second * 5)
@@ -144,7 +146,7 @@ func TestSaturation(t *testing.T) {
 	<-time.After(time.Millisecond * 1500)
 }
 
-func readChan(ctx context.Context) {
+func readChan(ctx context.Context, outChan chan string) {
 	for {
 		select {
 		case <-outChan:
@@ -168,8 +170,9 @@ func TestTail(t *testing.T) {
 	defer cancel()
 
 	<-time.After(time.Millisecond * 250)
-	go readChan(ctx)
-	go tail(ctx, localPath)
+	outChan := make(chan string)
+	go readChan(ctx, outChan)
+	go tail(ctx, localPath, outChan)
 	<-time.After(time.Millisecond * 500)
 	_, err = f.WriteString("this is a test\n")
 	if err != nil {

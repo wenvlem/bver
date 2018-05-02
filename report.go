@@ -11,11 +11,12 @@ import (
 
 type (
 	stats struct {
-		requests  reqSlice
-		reqTex    *sync.RWMutex
-		responses resSlice
-		resTex    *sync.RWMutex
-		txBytes   int
+		requests   reqSlice
+		reqTex     *sync.RWMutex
+		responses  resSlice
+		resTex     *sync.RWMutex
+		txBytes    int
+		reportFreq int
 	}
 
 	request struct {
@@ -33,15 +34,16 @@ type (
 	resSlice []response
 )
 
-var reportFreq = 2
-
-func buildReport(ctx context.Context, e chan logEntry) {
+func buildReport(ctx context.Context, e chan logEntry, s *satMon, reportFreq int) {
 	var t = time.Tick(time.Second * time.Duration(reportFreq))
 
 	report := stats{
-		reqTex: &sync.RWMutex{},
-		resTex: &sync.RWMutex{},
+		reqTex:     &sync.RWMutex{},
+		resTex:     &sync.RWMutex{},
+		reportFreq: reportFreq,
 	}
+
+	go s.monitor(ctx)
 
 	for {
 		select {
@@ -49,7 +51,7 @@ func buildReport(ctx context.Context, e chan logEntry) {
 			report.print()
 			report.clear()
 		case entry := <-e:
-			saturation.push()
+			s.push()
 			report.addRequest(request{section: entry.request.path, count: 1})
 			report.addResponse(response{code: entry.respCode, count: 1})
 			report.txBytes += entry.txBytes
@@ -82,12 +84,12 @@ func (s stats) print() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES TXBYTES
+// TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE TXBYTE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (s stats) printTxBytes() {
 	if s.txBytes != 0 {
-		fmt.Printf("Transmitted:\n %dbps\n", s.txBytes/reportFreq)
+		fmt.Printf("Transmitted:\n %dbps\n", s.txBytes/s.reportFreq)
 	}
 }
 
@@ -142,7 +144,7 @@ func (r resSlice) Swap(i, j int) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS REQUESTS
+// REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST REQUEST
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (s *stats) addRequest(r request) {
