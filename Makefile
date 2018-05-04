@@ -24,7 +24,7 @@ clean:
 	@docker rm -f bver || true
 
 test: 
-	@go test -coverprofile=cover.prof
+	@go test -coverprofile=cover.prof -race
 
 view: 
 	@go tool cover -html=cover.prof

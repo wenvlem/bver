@@ -47,7 +47,7 @@ func (r *satMon) push(ttl ...time.Duration) {
 func (r *satMon) pop(ttl time.Duration) {
 	// todo: add total to be popped and do at once, would need to track their pop "time"
 	<-time.After(ttl)
-	if r.count > 0 {
+	if atomic.LoadInt64(&r.count) > 0 {
 		atomic.AddInt64(&r.count, -1)
 	}
 }
@@ -63,7 +63,7 @@ func (r *satMon) monitor(ctx context.Context) {
 				triggered = false
 			}
 			if !triggered && atomic.LoadInt64(&r.count) >= r.threshold {
-				fmt.Printf("High traffic generated an alert - hits = %d, triggered at %s\n", r.count, time.Now().Format("15:04:05.1234"))
+				fmt.Printf("High traffic generated an alert - hits = %d, triggered at %s\n", atomic.LoadInt64(&r.count), time.Now().Format("15:04:05.1234"))
 				triggered = true
 			}
 
