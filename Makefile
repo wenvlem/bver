@@ -11,6 +11,7 @@ docker:
 
 save:
 	@echo "Saving bver docker image"
+	@> access.log
 	@docker image save -o bver-docker.tgz bver
 
 run: clean
