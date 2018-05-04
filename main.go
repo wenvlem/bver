@@ -16,10 +16,10 @@ var (
 )
 
 func init() {
+	flag.IntVar(&duration, "d", 120, "Duration of window in which to average requests per second.")
+	flag.IntVar(&reportFrequency, "f", 10, "Frequency at which to print summary (seconds).")
 	flag.StringVar(&logSource, "l", "/var/log/access.log", "Log location to watch and analyze.")
-	flag.IntVar(&reportFrequency, "f", 10, "Frequency at which to print summary.")
 	flag.IntVar(&psLimit, "t", 10, "Number of requests per second before printing an alert.")
-	flag.IntVar(&duration, "d", 120, "Duration of window to average requests per second.")
 	flag.Parse()
 
 	sanitizeOpts()
